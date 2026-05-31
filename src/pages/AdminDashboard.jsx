@@ -255,6 +255,27 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleToggleAdmin = async (userId, currentTipo) => {
+    const newTipo = currentTipo === 'admin' ? 'participante' : 'admin'
+    const action = newTipo === 'admin' ? 'tornar admin' : 'remover admin'
+
+    if (!confirm(`Tem certeza que deseja ${action} este utilizador?`)) return
+
+    try {
+      const { error } = await supabase
+        .from('utilizadores')
+        .update({ tipo: newTipo })
+        .eq('id', userId)
+
+      if (error) throw error
+
+      fetchData()
+      showToast(`Utilizador ${newTipo === 'admin' ? 'agora e admin' : 'ja nao e admin'}!`)
+    } catch (error) {
+      showToast('Erro ao actualizar utilizador: ' + error.message, 'error')
+    }
+  }
+
   const handleRejectSolicitacao = async () => {
     if (!rejectReason.trim()) {
       showToast('Indique o motivo da rejeicao', 'error')
@@ -720,6 +741,7 @@ export default function AdminDashboard() {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registado</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Accoes</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -735,8 +757,29 @@ export default function AdminDashboard() {
                             <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                               {new Date(u.created_at).toLocaleDateString('pt-PT')}
                             </td>
+                            <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                              {u.id !== user.id ? (
+                                <button
+                                  onClick={() => handleToggleAdmin(u.id, u.tipo)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                    u.tipo === 'admin'
+                                      ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                      : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                                  }`}
+                                >
+                                  {u.tipo === 'admin' ? 'Remover Admin' : 'Tornar Admin'}
+                                </button>
+                              ) : (
+                                <span className="text-xs text-gray-400">Voce</span>
+                              )}
+                            </td>
                           </tr>
                         ))}
+                        {utilizadores.length === 0 && (
+                          <tr>
+                            <td colSpan="5" className="px-6 py-8 text-center text-gray-500">Nenhum utilizador encontrado</td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -745,14 +788,28 @@ export default function AdminDashboard() {
                   <div className="md:hidden divide-y divide-gray-200">
                     {utilizadores.map((u) => (
                       <div key={u.id} className="p-4 hover:bg-gray-50">
-                        <div className="flex justify-between items-start mb-1">
-                          <p className="font-medium text-gray-900">{u.nome}</p>
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-medium text-gray-900">{u.nome}</p>
+                            <p className="text-sm text-gray-500">{u.email}</p>
+                          </div>
                           <span className={`text-xs px-2 py-1 rounded-full ${u.tipo === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
                             {u.tipo}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500">{u.email}</p>
-                        <p className="text-xs text-gray-400 mt-1">{new Date(u.created_at).toLocaleDateString('pt-PT')}</p>
+                        <p className="text-xs text-gray-400 mb-3">{new Date(u.created_at).toLocaleDateString('pt-PT')}</p>
+                        {u.id !== user.id && (
+                          <button
+                            onClick={() => handleToggleAdmin(u.id, u.tipo)}
+                            className={`w-full py-2 rounded-lg text-sm font-medium transition-all ${
+                              u.tipo === 'admin'
+                                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                            }`}
+                          >
+                            {u.tipo === 'admin' ? 'Remover Admin' : 'Tornar Admin'}
+                          </button>
+                        )}
                       </div>
                     ))}
                     {utilizadores.length === 0 && (
