@@ -62,7 +62,7 @@ export default function EventoDetalhe() {
     }
 
     try {
-      const { error } = await supabase
+      const { data: inscricao, error } = await supabase
         .from('inscricoes')
         .insert([
           {
@@ -71,6 +71,8 @@ export default function EventoDetalhe() {
             status: 'confirmada'
           }
         ])
+        .select()
+        .single()
 
       if (error) throw error
 
@@ -79,7 +81,7 @@ export default function EventoDetalhe() {
         .from('bilhetes')
         .insert([
           {
-            inscricao_id: id,
+            inscricao_id: inscricao.id,
             codigo_unico: `ISPT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
           }
         ])
