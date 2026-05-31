@@ -1,0 +1,63 @@
+import { createContext, useContext, useState, useEffect } from 'react'
+import { supabase } from './supabase'
+
+const AuthContext = createContext({})
+
+export const useAuth = () => useContext(AuthContext)
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    checkUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+        await checkAdmin(session.user.id)
+      } else {
+        setUser(null)
+        setIsAdmin(false)
+      }
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user) {
+      setUser(session.user)
+      await checkAdmin(session.user.id)
+    }
+    setLoading(false)
+  }
+
+  const checkAdmin = async (userId) => {
+    try {
+      const { data } = await supabase
+        .from('utilizadores')
+        .select('tipo')
+        .eq('id', userId)
+        .single()
+      setIsAdmin(data?.tipo === 'admin')
+    } catch (error) {
+      setIsAdmin(false)
+    }
+  }
+
+  const logout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setIsAdmin(false)
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, isAdmin, loading, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}

@@ -1,48 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/AuthContext'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const [user, setUser] = useState(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const { user, isAdmin, logout } = useAuth()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    checkUser()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user)
-        checkAdmin(session.user.id)
-      } else {
-        setUser(null)
-        setIsAdmin(false)
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user) {
-      setUser(session.user)
-      checkAdmin(session.user.id)
-    }
-  }
-
-  const checkAdmin = async (userId) => {
-    const { data } = await supabase
-      .from('utilizadores')
-      .select('tipo')
-      .eq('id', userId)
-      .single()
-    setIsAdmin(data?.tipo === 'admin')
-  }
-
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setIsAdmin(false)
+    await logout()
     navigate('/')
   }
 
