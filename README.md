@@ -1,6 +1,6 @@
 # Eventos Académicos ISPT
 
-Plataforma de gestão de eventos académicos do Instituto Superior de Tete (ISPT).
+Plataforma de gestão de eventos académicos do Instituto Superior Politecnico de Tete (ISPT).
 
 ## Funcionalidades
 

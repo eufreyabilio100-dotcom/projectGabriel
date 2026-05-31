@@ -93,7 +93,7 @@ export default function Eventos() {
           <div className="text-center mb-12">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Eventos Académicos</h1>
             <p className="text-lg text-gray-600">
-              Descubra os próximos eventos do Instituto Superior de Tete
+              Descubra os próximos eventos do Instituto Superior Politecnico de Tete
             </p>
           </div>
         </ScrollReveal>

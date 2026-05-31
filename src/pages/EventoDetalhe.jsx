@@ -368,7 +368,7 @@ export default function EventoDetalhe() {
                     Local
                   </h3>
                   <p className="text-lg font-medium text-gray-900">{evento.local}</p>
-                  <p className="text-sm text-gray-500 mt-1">Instituto Superior de Tete</p>
+                  <p className="text-sm text-gray-500 mt-1">Instituto Superior Politecnico de Tete</p>
                 </div>
               </ScrollReveal>
             </div>

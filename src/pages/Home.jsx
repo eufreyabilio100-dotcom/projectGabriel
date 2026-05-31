@@ -75,14 +75,14 @@ export default function Home() {
 
         <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="inline-block bg-secondary-500/20 text-secondary-300 px-4 py-1 rounded-full text-sm font-medium mb-6 animate-pulse">
-            Instituto Superior de Tete
+            Instituto Superior Politecnico de Tete
           </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
             Eventos Académicos
             <span className="block text-secondary-400 animate-gradient">ISPT</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-primary-100 max-w-3xl mx-auto">
-            Descubra e participe nos melhores eventos académicos do Instituto Superior de Tete
+            Descubra e participe nos melhores eventos académicos do Instituto Superior Politecnico de Tete
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

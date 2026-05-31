@@ -8,7 +8,7 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">ISPT Eventos</h3>
             <p className="text-gray-400">
-              Plataforma de eventos académicos do Instituto Superior de Tete
+              Plataforma de eventos académicos do Instituto Superior Politecnico de Tete
             </p>
           </div>
 
@@ -29,7 +29,7 @@ export default function Footer() {
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Contacto</h3>
-            <p className="text-gray-400">Instituto Superior de Tete</p>
+            <p className="text-gray-400">Instituto Superior Politecnico de Tete</p>
             <p className="text-gray-400">Tete, Moçambique</p>
           </div>
         </div>
