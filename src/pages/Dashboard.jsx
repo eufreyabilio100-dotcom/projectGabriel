@@ -26,10 +26,7 @@ export default function Dashboard() {
     try {
       const { data, error } = await supabase
         .from('inscricoes')
-        .select(`
-          *,
-          eventos (*)
-        `)
+        .select('*')
         .eq('utilizador_id', userId)
 
       if (error) throw error

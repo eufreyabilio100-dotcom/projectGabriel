@@ -16,7 +16,6 @@ export default function Eventos() {
       const { data, error } = await supabase
         .from('eventos')
         .select('*')
-        .order('data', { ascending: true })
 
       if (error) throw error
       setEventos(data || [])
