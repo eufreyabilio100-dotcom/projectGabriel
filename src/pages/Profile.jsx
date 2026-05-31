@@ -76,12 +76,20 @@ export default function Profile() {
 
     setSaving(true)
     try {
+      // Actualizar na tabela utilizadores
       const { error } = await supabase
         .from('utilizadores')
         .update({ nome: nome.trim() })
         .eq('id', user.id)
 
       if (error) throw error
+
+      // Actualizar no auth metadata (para reflectir no Navbar)
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { nome: nome.trim() }
+      })
+
+      if (authError) console.error('Erro ao actualizar auth metadata:', authError)
 
       setProfile({ ...profile, nome: nome.trim() })
       setEditMode(false)
