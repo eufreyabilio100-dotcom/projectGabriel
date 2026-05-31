@@ -96,8 +96,10 @@ export default function AdminDashboard() {
         supabase.from('eventos').select('*').order('created_at', { ascending: false }),
         supabase.from('inscricoes').select('*, utilizadores(nome, email), eventos(titulo)'),
         supabase.from('utilizadores').select('*').order('created_at', { ascending: false }),
-        supabase.from('solicitacoes_eventos').select('*, utilizadores(nome, email)').order('created_at', { ascending: false })
+        supabase.from('solicitacoes_eventos').select('*').order('created_at', { ascending: false })
       ])
+
+      console.log('Solicitacoes response:', solicitacoesRes)
 
       setEventos(eventosRes.data || [])
       setInscricoes(inscricoesRes.data || [])
