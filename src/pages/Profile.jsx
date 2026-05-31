@@ -93,10 +93,8 @@ export default function Profile() {
         console.error('Erro ao actualizar auth metadata:', authError)
       }
 
-      // Esperar um pouco e depois actualizar o utilizador no contexto
-      setTimeout(async () => {
-        await refreshUser()
-      }, 500)
+      // Actualizar o utilizador no contexto
+      await refreshUser()
 
       setProfile({ ...profile, nome: nome.trim() })
       setEditMode(false)
