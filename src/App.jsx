@@ -3,6 +3,7 @@ import { AuthProvider } from './lib/AuthContext'
 import { ThemeProvider } from './lib/ThemeContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import InstallPWA from './components/InstallPWA'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -44,6 +45,7 @@ function App() {
             </PageWrapper>
           </main>
           <Footer />
+          <InstallPWA />
         </div>
       </AuthProvider>
     </ThemeProvider>

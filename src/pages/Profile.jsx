@@ -89,13 +89,16 @@ export default function Profile() {
         data: { nome: nome.trim() }
       })
 
+      console.log('Update result:', updateData, authError)
+
       if (authError) {
         console.error('Erro ao actualizar auth metadata:', authError)
       }
 
       // Forcar actualizacao do utilizador no contexto com os novos metadados
       if (updateData?.user) {
-        setUser({ ...updateData.user, user_metadata: { ...updateData.user.user_metadata, nome: nome.trim() } })
+        console.log('User metadata:', updateData.user.user_metadata)
+        setUser(updateData.user)
       } else {
         await refreshUser()
       }

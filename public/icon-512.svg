@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2E7D32"/>
+      <stop offset="100%" style="stop-color:#1B5E20"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD600"/>
+      <stop offset="100%" style="stop-color:#FFC107"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <!-- Calendar icon -->
+  <rect x="120" y="160" width="272" height="240" rx="24" fill="white" opacity="0.15"/>
+  <rect x="140" y="200" width="232" height="180" rx="16" fill="white"/>
+  <!-- Calendar top bar -->
+  <rect x="140" y="200" width="232" height="50" rx="16" fill="url(#accent)"/>
+  <rect x="140" y="234" width="232" height="16" fill="url(#accent)"/>
+  <!-- Calendar hooks -->
+  <rect x="200" y="175" width="16" height="50" rx="8" fill="url(#accent)"/>
+  <rect x="296" y="175" width="16" height="50" rx="8" fill="url(#accent)"/>
+  <!-- Calendar grid dots -->
+  <circle cx="190" cy="290" r="12" fill="#2E7D32"/>
+  <circle cx="256" cy="290" r="12" fill="#2E7D32"/>
+  <circle cx="322" cy="290" r="12" fill="#2E7D32"/>
+  <circle cx="190" cy="340" r="12" fill="#2E7D32"/>
+  <circle cx="256" cy="340" r="12" fill="url(#accent)"/>
+  <circle cx="322" cy="340" r="12" fill="#2E7D32"/>
+  <!-- ISPT text -->
+  <text x="256" y="130" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="72" font-weight="900" fill="white">ISPT</text>
+  <!-- Star accent (Mozambique) -->
+  <polygon points="256,90 262,108 280,108 266,118 271,136 256,126 241,136 246,118 232,108 250,108" fill="url(#accent)"/>
+</svg>
