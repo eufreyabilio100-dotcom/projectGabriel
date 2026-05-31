@@ -1,5 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from './lib/AuthContext'
+import { ThemeProvider } from './lib/ThemeContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
@@ -24,26 +25,28 @@ function App() {
   const location = useLocation()
 
   return (
-    <AuthProvider>
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow">
-          <PageWrapper key={location.pathname}>
-            <Routes location={location}>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/registo" element={<Register />} />
-              <Route path="/eventos" element={<Eventos />} />
-              <Route path="/eventos/:id" element={<EventoDetalhe />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/perfil" element={<Profile />} />
-            </Routes>
-          </PageWrapper>
-        </main>
-        <Footer />
-      </div>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors duration-300">
+          <Navbar />
+          <main className="flex-grow">
+            <PageWrapper key={location.pathname}>
+              <Routes location={location}>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/registo" element={<Register />} />
+                <Route path="/eventos" element={<Eventos />} />
+                <Route path="/eventos/:id" element={<EventoDetalhe />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/perfil" element={<Profile />} />
+              </Routes>
+            </PageWrapper>
+          </main>
+          <Footer />
+        </div>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

@@ -12,6 +12,12 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: #f8faf8;
   color: #1a1a1a;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
+  background-color: #111827;
+  color: #f3f4f6;
 }
 
 @keyframes slideDown {
