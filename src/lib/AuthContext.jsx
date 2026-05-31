@@ -21,25 +21,10 @@ export function AuthProvider({ children }) {
         setUser(null)
         setIsAdmin(false)
       }
-      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
   }, [])
-
-  const checkUser = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        setUser(session.user)
-        checkAdmin(session.user.id)
-      }
-    } catch (error) {
-      console.error('Erro ao verificar sessão:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const checkAdmin = async (userId) => {
     try {
@@ -51,6 +36,20 @@ export function AuthProvider({ children }) {
       setIsAdmin(data?.tipo === 'admin')
     } catch (error) {
       setIsAdmin(false)
+    }
+  }
+
+  const checkUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        setUser(session.user)
+        await checkAdmin(session.user.id)
+      }
+    } catch (error) {
+      console.error('Erro ao verificar sessao:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
