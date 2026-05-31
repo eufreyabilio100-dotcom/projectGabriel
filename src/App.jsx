@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from './lib/AuthContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -11,22 +11,35 @@ import Dashboard from './pages/Dashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import Profile from './pages/Profile'
 
+function PageWrapper({ children }) {
+  const location = useLocation()
+  return (
+    <div key={location.pathname} className="page-transition">
+      {children}
+    </div>
+  )
+}
+
 function App() {
+  const location = useLocation()
+
   return (
     <AuthProvider>
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/registo" element={<Register />} />
-            <Route path="/eventos" element={<Eventos />} />
-            <Route path="/eventos/:id" element={<EventoDetalhe />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/perfil" element={<Profile />} />
-          </Routes>
+          <PageWrapper key={location.pathname}>
+            <Routes location={location}>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/registo" element={<Register />} />
+              <Route path="/eventos" element={<Eventos />} />
+              <Route path="/eventos/:id" element={<EventoDetalhe />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/perfil" element={<Profile />} />
+            </Routes>
+          </PageWrapper>
         </main>
         <Footer />
       </div>
