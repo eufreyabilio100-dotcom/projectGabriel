@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/AuthContext'
 
 export default function Home() {
   const [stats, setStats] = useState({ eventos: 0, participantes: 0 })
   const [isVisible, setIsVisible] = useState(false)
+  const { user, isAdmin } = useAuth()
 
   useEffect(() => {
     setIsVisible(true)
@@ -49,12 +51,22 @@ export default function Home() {
             >
               Ver Eventos
             </Link>
-            <Link
-              to="/registo"
-              className="border-2 border-white/80 hover:bg-white hover:text-primary-700 px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300 hover:-translate-y-1"
-            >
-              Registar-se
-            </Link>
+            {!user && (
+              <Link
+                to="/registo"
+                className="border-2 border-white/80 hover:bg-white hover:text-primary-700 px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300 hover:-translate-y-1"
+              >
+                Registar-se
+              </Link>
+            )}
+            {user && (
+              <Link
+                to={isAdmin ? "/admin" : "/dashboard"}
+                className="border-2 border-white/80 hover:bg-white hover:text-primary-700 px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300 hover:-translate-y-1"
+              >
+                {isAdmin ? "Painel Admin" : "Meu Dashboard"}
+              </Link>
+            )}
           </div>
 
           {/* Stats Counter */}
@@ -115,15 +127,20 @@ export default function Home() {
       {/* CTA Section */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-800 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Pronto para começar?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            {user ? "Explore os eventos disponíveis" : "Pronto para começar?"}
+          </h2>
           <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
-            Junte-se à comunidade académica do ISPT e nunca mais perca um evento importante
+            {user
+              ? "Descubra os próximos eventos académicos do ISPT"
+              : "Junte-se à comunidade académica do ISPT e nunca mais perca um evento importante"
+            }
           </p>
           <Link
-            to="/registo"
+            to={user ? "/eventos" : "/registo"}
             className="inline-block bg-secondary-500 hover:bg-secondary-600 text-white px-10 py-4 rounded-lg font-semibold text-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
           >
-            Criar Conta Gratuita
+            {user ? "Ver Eventos" : "Criar Conta Gratuita"}
           </Link>
         </div>
       </section>
