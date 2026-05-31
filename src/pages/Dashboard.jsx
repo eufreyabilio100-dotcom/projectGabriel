@@ -13,6 +13,17 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('inscricoes')
   const [toast, setToast] = useState(null)
   const [expandedBilhete, setExpandedBilhete] = useState(null)
+  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [solicitacoes, setSolicitacoes] = useState([])
+  const [requestLoading, setRequestLoading] = useState(false)
+  const [requestData, setRequestData] = useState({
+    titulo: '',
+    descricao: '',
+    data: '',
+    hora: '',
+    local: '',
+    capacidade: '50'
+  })
 
   useEffect(() => {
     if (authLoading) return
@@ -43,6 +54,15 @@ export default function Dashboard() {
 
         setBilhetes(bilhetesData || [])
       }
+
+      // Fetch solicitations
+      const { data: solicitacoesData } = await supabase
+        .from('solicitacoes_eventos')
+        .select('*')
+        .eq('utilizador_id', user.id)
+        .order('created_at', { ascending: false })
+
+      setSolicitacoes(solicitacoesData || [])
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
       setToast({ message: 'Erro ao carregar dados', type: 'error' })
@@ -54,6 +74,32 @@ export default function Dashboard() {
   const handleLogout = async () => {
     await logout()
     navigate('/')
+  }
+
+  const handleRequestEvent = async (e) => {
+    e.preventDefault()
+    setRequestLoading(true)
+    try {
+      const { error } = await supabase
+        .from('solicitacoes_eventos')
+        .insert([{
+          ...requestData,
+          capacidade: parseInt(requestData.capacidade),
+          utilizador_id: user.id,
+          status: 'pendente'
+        }])
+
+      if (error) throw error
+
+      setShowRequestModal(false)
+      setRequestData({ titulo: '', descricao: '', data: '', hora: '', local: '', capacidade: '50' })
+      fetchData()
+      setToast({ message: 'Solicitacao enviada com sucesso! Aguarde aprovacao do admin.', type: 'success' })
+    } catch (error) {
+      setToast({ message: 'Erro ao enviar solicitacao: ' + error.message, type: 'error' })
+    } finally {
+      setRequestLoading(false)
+    }
   }
 
   const getCountdown = (data, hora) => {
@@ -83,7 +129,9 @@ export default function Dashboard() {
     total: inscricoes.length,
     confirmadas: inscricoes.filter(i => i.status === 'confirmada').length,
     pendentes: inscricoes.filter(i => i.status === 'pendente').length,
-    bilhetes: bilhetes.length
+    bilhetes: bilhetes.length,
+    solicitacoes: solicitacoes.length,
+    solicitacoesPendentes: solicitacoes.filter(s => s.status === 'pendente').length
   }
 
   if (authLoading || loading) {
@@ -202,10 +250,11 @@ export default function Dashboard() {
 
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-gray-200 overflow-x-auto">
             {[
               { id: 'inscricoes', label: 'Inscricoes', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
-              { id: 'bilhetes', label: 'Bilhetes', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z' }
+              { id: 'bilhetes', label: 'Bilhetes', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z' },
+              { id: 'solicitacoes', label: 'Solicitacoes', icon: 'M12 4v16m8-8H4' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -223,7 +272,7 @@ export default function Dashboard() {
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   activeTab === tab.id ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {tab.id === 'inscricoes' ? stats.total : stats.bilhetes}
+                  {tab.id === 'inscricoes' ? stats.total : tab.id === 'bilhetes' ? stats.bilhetes : stats.solicitacoesPendentes}
                 </span>
               </button>
             ))}
@@ -392,6 +441,109 @@ export default function Dashboard() {
                 </div>
               )
             )}
+
+            {/* Solicitations Tab */}
+            {activeTab === 'solicitacoes' && (
+              <div className="animate-fadeIn">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">As Minhas Solicitacoes</h3>
+                    <p className="text-sm text-gray-500">Solicite eventos e acompanhe o status</p>
+                  </div>
+                  <button
+                    onClick={() => setShowRequestModal(true)}
+                    className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg flex items-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Solicitar Evento
+                  </button>
+                </div>
+
+                {solicitacoes.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 text-lg mb-2">Nenhuma solicitacao</p>
+                    <p className="text-gray-400 text-sm mb-6">Solicite um evento e aguarde a aprovacao do admin</p>
+                    <button
+                      onClick={() => setShowRequestModal(true)}
+                      className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium transition-all hover:shadow-lg"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Solicitar Evento
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {solicitacoes.map((sol) => (
+                      <div key={sol.id} className="border border-gray-200 rounded-xl p-4 lg:p-5 hover:shadow-md transition-all">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-gray-900 text-lg truncate">{sol.titulo}</h3>
+                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${
+                                sol.status === 'aprovada' ? 'bg-green-100 text-green-700' :
+                                sol.status === 'rejeitada' ? 'bg-red-100 text-red-700' :
+                                'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {sol.status === 'aprovada' ? 'Aprovada' : sol.status === 'rejeitada' ? 'Rejeitada' : 'Pendente'}
+                              </span>
+                            </div>
+                            {sol.descricao && (
+                              <p className="text-sm text-gray-500 mb-2 line-clamp-2">{sol.descricao}</p>
+                            )}
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                {new Date(sol.data).toLocaleDateString('pt-PT')}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {sol.hora}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {sol.local}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                {sol.capacidade} vagas
+                              </span>
+                            </div>
+                            {sol.motivo_rejeicao && (
+                              <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3">
+                                <p className="text-sm text-red-700">
+                                  <strong>Motivo da rejeicao:</strong> {sol.motivo_rejeicao}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400 flex-shrink-0">
+                            {new Date(sol.created_at).toLocaleDateString('pt-PT')}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -440,6 +592,139 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Request Event Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center animate-fadeIn">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:mx-4 max-h-[90vh] overflow-y-auto transform transition-all">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Solicitar Evento</h3>
+                  <p className="text-sm text-gray-500 mt-1">Preencha os dados do evento desejado</p>
+                </div>
+                <button onClick={() => setShowRequestModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleRequestEvent} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Titulo do Evento *</label>
+                  <input
+                    type="text"
+                    required
+                    value={requestData.titulo}
+                    onChange={(e) => setRequestData({...requestData, titulo: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    placeholder="Ex: Workshop de Programacao"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descricao</label>
+                  <textarea
+                    value={requestData.descricao}
+                    onChange={(e) => setRequestData({...requestData, descricao: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    rows="3"
+                    placeholder="Descreva o evento que deseja..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Data *</label>
+                    <input
+                      type="date"
+                      required
+                      value={requestData.data}
+                      onChange={(e) => setRequestData({...requestData, data: e.target.value})}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Hora *</label>
+                    <input
+                      type="time"
+                      required
+                      value={requestData.hora}
+                      onChange={(e) => setRequestData({...requestData, hora: e.target.value})}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Local *</label>
+                  <input
+                    type="text"
+                    required
+                    value={requestData.local}
+                    onChange={(e) => setRequestData({...requestData, local: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    placeholder="Ex: Auditorio ISPT"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Capacidade Pretendida</label>
+                  <input
+                    type="number"
+                    value={requestData.capacidade}
+                    onChange={(e) => setRequestData({...requestData, capacidade: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    placeholder="50"
+                    min="1"
+                  />
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm text-blue-700">
+                      A sua solicitacao sera analisada pelo administrador. Recebera uma notificacao quando for aprovada ou rejeitada.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowRequestModal(false)}
+                    className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={requestLoading}
+                    className="px-6 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all hover:shadow-lg disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {requestLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                        A enviar...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        Enviar Solicitacao
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

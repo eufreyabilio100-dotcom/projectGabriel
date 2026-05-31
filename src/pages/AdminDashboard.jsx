@@ -17,6 +17,10 @@ export default function AdminDashboard() {
   const [editingEvento, setEditingEvento] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [toast, setToast] = useState(null)
+  const [solicitacoes, setSolicitacoes] = useState([])
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectingId, setRejectingId] = useState(null)
+  const [rejectReason, setRejectReason] = useState('')
   const [formData, setFormData] = useState({
     titulo: '',
     descricao: '',
@@ -45,19 +49,23 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const [eventosRes, inscricoesRes, utilizadoresRes] = await Promise.all([
+      const [eventosRes, inscricoesRes, utilizadoresRes, solicitacoesRes] = await Promise.all([
         supabase.from('eventos').select('*').order('created_at', { ascending: false }),
         supabase.from('inscricoes').select('*, utilizadores(nome, email), eventos(titulo)'),
-        supabase.from('utilizadores').select('*').order('created_at', { ascending: false })
+        supabase.from('utilizadores').select('*').order('created_at', { ascending: false }),
+        supabase.from('solicitacoes_eventos').select('*, utilizadores(nome, email)').order('created_at', { ascending: false })
       ])
 
       setEventos(eventosRes.data || [])
       setInscricoes(inscricoesRes.data || [])
       setUtilizadores(utilizadoresRes.data || [])
+      setSolicitacoes(solicitacoesRes.data || [])
       setStats({
         totalEventos: eventosRes.data?.length || 0,
         totalInscricoes: inscricoesRes.data?.length || 0,
-        totalUtilizadores: utilizadoresRes.data?.length || 0
+        totalUtilizadores: utilizadoresRes.data?.length || 0,
+        totalSolicitacoes: solicitacoesRes.data?.length || 0,
+        solicitacoesPendentes: solicitacoesRes.data?.filter(s => s.status === 'pendente').length || 0
       })
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
@@ -147,6 +155,65 @@ export default function AdminDashboard() {
     navigate('/')
   }
 
+  const handleApproveSolicitacao = async (solicitacao) => {
+    try {
+      // Create the event
+      const { error: eventError } = await supabase
+        .from('eventos')
+        .insert([{
+          titulo: solicitacao.titulo,
+          descricao: solicitacao.descricao,
+          data: solicitacao.data,
+          hora: solicitacao.hora,
+          local: solicitacao.local,
+          capacidade: solicitacao.capacidade,
+          organizador_id: user.id
+        }])
+
+      if (eventError) throw eventError
+
+      // Update solicitation status
+      const { error: updateError } = await supabase
+        .from('solicitacoes_eventos')
+        .update({ status: 'aprovada' })
+        .eq('id', solicitacao.id)
+
+      if (updateError) throw updateError
+
+      fetchData()
+      showToast('Solicitacao aprovada e evento criado!')
+    } catch (error) {
+      showToast('Erro ao aprovar solicitacao: ' + error.message, 'error')
+    }
+  }
+
+  const handleRejectSolicitacao = async () => {
+    if (!rejectReason.trim()) {
+      showToast('Indique o motivo da rejeicao', 'error')
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('solicitacoes_eventos')
+        .update({
+          status: 'rejeitada',
+          motivo_rejeicao: rejectReason.trim()
+        })
+        .eq('id', rejectingId)
+
+      if (error) throw error
+
+      setShowRejectModal(false)
+      setRejectingId(null)
+      setRejectReason('')
+      fetchData()
+      showToast('Solicitacao rejeitada')
+    } catch (error) {
+      showToast('Erro ao rejeitar solicitacao: ' + error.message, 'error')
+    }
+  }
+
   const filteredEventos = eventos.filter(e =>
     e.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.local.toLowerCase().includes(searchTerm.toLowerCase())
@@ -166,6 +233,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'overview', label: 'Visao Geral', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
     { id: 'eventos', label: 'Eventos', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { id: 'solicitacoes', label: 'Solicitacoes', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', badge: stats.solicitacoesPendentes },
     { id: 'inscricoes', label: 'Inscricoes', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z' },
     { id: 'utilizadores', label: 'Utilizadores', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' }
   ]
@@ -226,7 +294,7 @@ export default function AdminDashboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap relative ${
                   activeTab === tab.id
                     ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50/50'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -236,6 +304,9 @@ export default function AdminDashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
                 </svg>
                 {tab.label}
+                {tab.badge > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-1">{tab.badge}</span>
+                )}
               </button>
             ))}
           </div>
@@ -400,6 +471,115 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Solicitacoes Tab */}
+            {activeTab === 'solicitacoes' && (
+              <div className="animate-fadeIn">
+                {solicitacoes.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 text-lg">Nenhuma solicitacao recebida</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {solicitacoes.map((sol) => (
+                      <div key={sol.id} className={`border rounded-xl p-5 transition-all hover:shadow-md ${
+                        sol.status === 'pendente' ? 'border-yellow-300 bg-yellow-50/50' :
+                        sol.status === 'aprovada' ? 'border-green-300 bg-green-50/50' :
+                        'border-red-300 bg-red-50/50'
+                      }`}>
+                        <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-gray-900 text-lg">{sol.titulo}</h3>
+                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                sol.status === 'aprovada' ? 'bg-green-100 text-green-700' :
+                                sol.status === 'rejeitada' ? 'bg-red-100 text-red-700' :
+                                'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {sol.status === 'aprovada' ? 'Aprovada' : sol.status === 'rejeitada' ? 'Rejeitada' : 'Pendente'}
+                              </span>
+                            </div>
+
+                            <p className="text-sm text-gray-500 mb-1">
+                              <strong>Solicitado por:</strong> {sol.utilizadores?.nome || 'N/A'} ({sol.utilizadores?.email})
+                            </p>
+
+                            {sol.descricao && (
+                              <p className="text-sm text-gray-500 mb-2">{sol.descricao}</p>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                {new Date(sol.data).toLocaleDateString('pt-PT')}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {sol.hora}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {sol.local}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {sol.capacidade} vagas
+                              </span>
+                            </div>
+
+                            {sol.motivo_rejeicao && (
+                              <div className="mt-3 bg-red-100 border border-red-200 rounded-lg p-3">
+                                <p className="text-sm text-red-700">
+                                  <strong>Motivo da rejeicao:</strong> {sol.motivo_rejeicao}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Action Buttons */}
+                          {sol.status === 'pendente' && (
+                            <div className="flex gap-2 flex-shrink-0">
+                              <button
+                                onClick={() => handleApproveSolicitacao(sol)}
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg flex items-center gap-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Aprovar
+                              </button>
+                              <button
+                                onClick={() => { setRejectingId(sol.id); setShowRejectModal(true); }}
+                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg flex items-center gap-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Rejeitar
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -663,6 +843,65 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center animate-fadeIn">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:mx-4 transform transition-all">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Rejeitar Solicitacao</h3>
+                <button onClick={() => { setShowRejectModal(false); setRejectingId(null); setRejectReason(''); }} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Motivo da Rejeicao *</label>
+                  <textarea
+                    required
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+                    rows="4"
+                    placeholder="Indique o motivo da rejeicao..."
+                  />
+                </div>
+
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <p className="text-sm text-red-700">
+                      O utilizador sera notificado sobre a rejeicao e o motivo indicado.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setShowRejectModal(false); setRejectingId(null); setRejectReason(''); }}
+                    className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleRejectSolicitacao}
+                    className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all hover:shadow-lg"
+                  >
+                    Confirmar Rejeicao
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
