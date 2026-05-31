@@ -576,7 +576,7 @@ export default function AdminDashboard() {
                             </div>
 
                             <p className="text-sm text-gray-500 mb-1">
-                              <strong>Solicitado por:</strong> {sol.utilizadores?.nome || 'N/A'} ({sol.utilizadores?.email})
+                              <strong>Solicitado por:</strong> {utilizadores.find(u => u.id === sol.utilizador_id)?.nome || 'N/A'} ({utilizadores.find(u => u.id === sol.utilizador_id)?.email || ''})
                             </p>
 
                             {sol.descricao && (
