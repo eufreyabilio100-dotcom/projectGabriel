@@ -8,6 +8,7 @@ export const useAuth = () => useContext(AuthContext)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     checkUser()
@@ -20,6 +21,7 @@ export function AuthProvider({ children }) {
         setUser(null)
         setIsAdmin(false)
       }
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -34,6 +36,8 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error('Erro ao verificar sessão:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -57,7 +61,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, logout }}>
       {children}
     </AuthContext.Provider>
   )

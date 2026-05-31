@@ -5,7 +5,7 @@ import { useAuth } from '../lib/AuthContext'
 import Toast from '../components/Toast'
 
 export default function Profile() {
-  const { user, logout } = useAuth()
+  const { user, loading: authLoading, logout } = useAuth()
   const navigate = useNavigate()
 
   const [profile, setProfile] = useState(null)
@@ -17,13 +17,14 @@ export default function Profile() {
   const [stats, setStats] = useState({ inscricoes: 0, confirmadas: 0, bilhetes: 0 })
 
   useEffect(() => {
+    if (authLoading) return
     if (!user) {
       navigate('/login')
       return
     }
     fetchProfile()
     fetchStats()
-  }, [user])
+  }, [user, authLoading])
 
   const fetchProfile = async () => {
     try {

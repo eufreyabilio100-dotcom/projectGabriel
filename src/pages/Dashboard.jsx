@@ -5,17 +5,18 @@ import { useAuth } from '../lib/AuthContext'
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, loading: authLoading, logout } = useAuth()
   const [inscricoes, setInscricoes] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (authLoading) return
     if (!user) {
       navigate('/login')
       return
     }
     fetchInscricoes()
-  }, [user])
+  }, [user, authLoading])
 
   const fetchInscricoes = async () => {
     try {
