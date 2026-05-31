@@ -6,7 +6,7 @@ import Toast from '../components/Toast'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const { user, isAdmin, logout } = useAuth()
+  const { user, isAdmin, loading: authLoading, logout } = useAuth()
   const [eventos, setEventos] = useState([])
   const [inscricoes, setInscricoes] = useState([])
   const [utilizadores, setUtilizadores] = useState([])
@@ -27,6 +27,7 @@ export default function AdminDashboard() {
   })
 
   useEffect(() => {
+    if (authLoading) return
     if (!user) {
       navigate('/login')
       return
@@ -36,7 +37,7 @@ export default function AdminDashboard() {
       return
     }
     fetchData()
-  }, [user, isAdmin])
+  }, [user, isAdmin, authLoading])
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type })
