@@ -39,7 +39,12 @@ export default function Navbar() {
                   {isAdmin ? "Admin" : "Dashboard"}
                 </Link>
                 <div className="flex items-center space-x-3 ml-2">
-                  <span className="text-sm text-primary-200">{user.user_metadata?.nome || user.email}</span>
+                  <Link to="/perfil" className="text-sm text-primary-200 hover:text-white transition-colors flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    {user.user_metadata?.nome || user.email}
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
@@ -93,7 +98,12 @@ export default function Navbar() {
                   {isAdmin ? "Admin" : "Dashboard"}
                 </Link>
                 <div className="px-3 py-2">
-                  <p className="text-sm text-primary-200 mb-2">{user.user_metadata?.nome || user.email}</p>
+                  <Link to="/perfil" className="flex items-center gap-2 text-sm text-primary-200 hover:text-white mb-2 transition-colors">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    {user.user_metadata?.nome || user.email}
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full bg-red-500 hover:bg-red-600 px-4 py-2 rounded-md text-sm font-medium transition-colors"

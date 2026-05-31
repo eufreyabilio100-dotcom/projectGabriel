@@ -9,6 +9,7 @@ import Eventos from './pages/Eventos'
 import EventoDetalhe from './pages/EventoDetalhe'
 import Dashboard from './pages/Dashboard'
 import AdminDashboard from './pages/AdminDashboard'
+import Profile from './pages/Profile'
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route path="/eventos/:id" element={<EventoDetalhe />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/perfil" element={<Profile />} />
           </Routes>
         </main>
         <Footer />
