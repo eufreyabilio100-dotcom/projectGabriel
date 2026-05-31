@@ -8,32 +8,33 @@ export const useAuth = () => useContext(AuthContext)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     checkUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user)
-        await checkAdmin(session.user.id)
+        checkAdmin(session.user.id)
       } else {
         setUser(null)
         setIsAdmin(false)
       }
-      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user) {
-      setUser(session.user)
-      await checkAdmin(session.user.id)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        setUser(session.user)
+        checkAdmin(session.user.id)
+      }
+    } catch (error) {
+      console.error('Erro ao verificar sessão:', error)
     }
-    setLoading(false)
   }
 
   const checkAdmin = async (userId) => {
@@ -56,7 +57,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, logout }}>
       {children}
     </AuthContext.Provider>
   )
