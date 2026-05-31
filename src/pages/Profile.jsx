@@ -151,14 +151,14 @@ export default function Profile() {
 
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary-700 to-primary-900 rounded-t-2xl p-8 text-white">
-          <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center text-4xl font-bold backdrop-blur-sm">
+        <div className="bg-gradient-to-r from-primary-700 to-primary-900 rounded-t-2xl p-6 sm:p-8 text-white">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white/20 rounded-full flex items-center justify-center text-3xl sm:text-4xl font-bold backdrop-blur-sm flex-shrink-0">
               {profile.nome.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <h1 className="text-3xl font-bold">{profile.nome}</h1>
-              <p className="text-primary-200 mt-1">{profile.email}</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold truncate">{profile.nome}</h1>
+              <p className="text-primary-200 mt-1 text-sm sm:text-base truncate">{profile.email}</p>
               <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${tipoColor}`}>
                 {tipoLabel}
               </span>
@@ -167,26 +167,26 @@ export default function Profile() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-4 -mt-6 relative z-10 px-4">
-          <div className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-shadow duration-300">
-            <div className="text-3xl font-bold text-primary-700">{stats.inscricoes}</div>
-            <div className="text-sm text-gray-500 mt-1">Inscrições</div>
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 -mt-6 relative z-10 px-3 sm:px-4">
+          <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 text-center hover:shadow-lg transition-shadow duration-300">
+            <div className="text-2xl sm:text-3xl font-bold text-primary-700">{stats.inscricoes}</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-1">Inscricoes</div>
           </div>
-          <div className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-shadow duration-300">
-            <div className="text-3xl font-bold text-green-600">{stats.confirmadas}</div>
-            <div className="text-sm text-gray-500 mt-1">Confirmadas</div>
+          <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 text-center hover:shadow-lg transition-shadow duration-300">
+            <div className="text-2xl sm:text-3xl font-bold text-green-600">{stats.confirmadas}</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-1">Confirmadas</div>
           </div>
-          <div className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-shadow duration-300">
-            <div className="text-3xl font-bold text-secondary-600">{stats.bilhetes}</div>
-            <div className="text-sm text-gray-500 mt-1">Bilhetes</div>
+          <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 text-center hover:shadow-lg transition-shadow duration-300">
+            <div className="text-2xl sm:text-3xl font-bold text-secondary-600">{stats.bilhetes}</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-1">Bilhetes</div>
           </div>
         </div>
 
         {/* Profile Details */}
         <div className="bg-white rounded-b-2xl shadow-md mt-6 overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
+          <div className="p-4 sm:p-6 border-b border-gray-100">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-800">Informações Pessoais</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Informacoes Pessoais</h2>
               {!editMode && (
                 <button
                   onClick={() => setEditMode(true)}
@@ -201,8 +201,8 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 sm:p-6 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">Nome</label>
                 {editMode ? (
@@ -210,7 +210,7 @@ export default function Profile() {
                     type="text"
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                   />
                 ) : (
                   <p className="text-gray-800 font-medium">{profile.nome}</p>
@@ -219,7 +219,7 @@ export default function Profile() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
-                <p className="text-gray-800 font-medium">{profile.email}</p>
+                <p className="text-gray-800 font-medium text-sm sm:text-base truncate">{profile.email}</p>
               </div>
 
               <div>
@@ -236,20 +236,20 @@ export default function Profile() {
             </div>
 
             {editMode && (
-              <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-gray-100">
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-lg disabled:opacity-50"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200 hover:shadow-lg disabled:opacity-50"
                 >
-                  {saving ? 'A guardar...' : 'Guardar Alterações'}
+                  {saving ? 'A guardar...' : 'Guardar Alteracoes'}
                 </button>
                 <button
                   onClick={() => {
                     setEditMode(false)
                     setNome(profile.nome)
                   }}
-                  className="text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="text-gray-500 hover:text-gray-700 px-4 py-2.5 rounded-lg font-medium transition-colors"
                 >
                   Cancelar
                 </button>
