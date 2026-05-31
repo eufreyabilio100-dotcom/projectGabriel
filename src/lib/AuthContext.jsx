@@ -59,8 +59,15 @@ export function AuthProvider({ children }) {
     setIsAdmin(false)
   }
 
+  const refreshUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user) {
+      setUser(session.user)
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

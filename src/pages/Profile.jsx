@@ -5,7 +5,7 @@ import { useAuth } from '../lib/AuthContext'
 import Toast from '../components/Toast'
 
 export default function Profile() {
-  const { user, loading: authLoading, logout } = useAuth()
+  const { user, loading: authLoading, logout, refreshUser } = useAuth()
   const navigate = useNavigate()
 
   const [profile, setProfile] = useState(null)
@@ -90,6 +90,9 @@ export default function Profile() {
       })
 
       if (authError) console.error('Erro ao actualizar auth metadata:', authError)
+
+      // Actualizar o utilizador no contexto
+      await refreshUser()
 
       setProfile({ ...profile, nome: nome.trim() })
       setEditMode(false)
