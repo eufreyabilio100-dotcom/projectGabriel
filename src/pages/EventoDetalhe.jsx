@@ -202,24 +202,45 @@ export default function EventoDetalhe() {
         </ScrollReveal>
 
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          {/* Event Image */}
+          {evento.imagem_url && (
+            <div className="h-64 md:h-80 overflow-hidden">
+              <img
+                src={evento.imagem_url}
+                alt={evento.titulo}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary-600 to-primary-800 text-white p-8 relative overflow-hidden">
+          <div className={`${evento.imagem_url ? 'bg-gradient-to-r from-primary-700 to-primary-900' : 'bg-gradient-to-r from-primary-600 to-primary-800'} text-white p-8 relative overflow-hidden`}>
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 right-0 w-64 h-64 bg-secondary-400 rounded-full blur-3xl" />
             </div>
             <div className="relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  {status === 'today' && (
-                    <span className="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold mb-3 animate-pulse">
-                      Acontece Hoje!
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                      {evento.tipo === 'desporto' ? 'Desporto' :
+                       evento.tipo === 'cultural' ? 'Cultural' :
+                       evento.tipo === 'workshop' ? 'Workshop' :
+                       evento.tipo === 'conferencia' ? 'Conferencia' :
+                       evento.tipo === 'palestra' ? 'Palestra' :
+                       evento.tipo === 'outro' ? 'Outro' : 'Academico'}
                     </span>
-                  )}
-                  {status === 'past' && (
-                    <span className="inline-block bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-semibold mb-3">
-                      Evento Realizado
-                    </span>
-                  )}
+                    {status === 'today' && (
+                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-pulse">
+                        Acontece Hoje!
+                      </span>
+                    )}
+                    {status === 'past' && (
+                      <span className="bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                        Evento Realizado
+                      </span>
+                    )}
+                  </div>
                   <h1 className="text-3xl md:text-4xl font-bold mb-2">{evento.titulo}</h1>
                 </div>
 

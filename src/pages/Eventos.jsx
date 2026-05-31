@@ -10,6 +10,7 @@ export default function Eventos() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('date-asc')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterTipo, setFilterTipo] = useState('all')
   const [viewMode, setViewMode] = useState('grid')
 
   useEffect(() => {
@@ -31,6 +32,19 @@ export default function Eventos() {
     }
   }
 
+  const getTipoLabel = (tipo) => {
+    const labels = {
+      academico: 'Academico',
+      desporto: 'Desporto',
+      cultural: 'Cultural',
+      workshop: 'Workshop',
+      conferencia: 'Conferencia',
+      palestra: 'Palestra',
+      outro: 'Outro'
+    }
+    return labels[tipo] || 'Academico'
+  }
+
   const getEventStatus = (evento) => {
     const eventDate = new Date(evento.data)
     const today = new Date()
@@ -48,11 +62,18 @@ export default function Eventos() {
         evento.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         evento.local?.toLowerCase().includes(searchTerm.toLowerCase())
 
-      if (filterStatus === 'all') return matchesSearch
-      if (filterStatus === 'upcoming') return matchesSearch && getEventStatus(evento) === 'upcoming'
-      if (filterStatus === 'today') return matchesSearch && getEventStatus(evento) === 'today'
-      if (filterStatus === 'past') return matchesSearch && getEventStatus(evento) === 'past'
-      return matchesSearch
+      const matchesStatus =
+        filterStatus === 'all' ||
+        (filterStatus === 'upcoming' && getEventStatus(evento) === 'upcoming') ||
+        (filterStatus === 'today' && getEventStatus(evento) === 'today') ||
+        (filterStatus === 'past' && getEventStatus(evento) === 'past')
+
+      const matchesTipo =
+        filterTipo === 'all' ||
+        evento.tipo === filterTipo ||
+        (!evento.tipo && filterTipo === 'academico')
+
+      return matchesSearch && matchesStatus && matchesTipo
     })
     .sort((a, b) => {
       if (sortBy === 'date-asc') return new Date(a.data) - new Date(b.data)
@@ -148,6 +169,22 @@ export default function Eventos() {
                 ))}
               </div>
 
+              {/* Tipo Filter */}
+              <select
+                value={filterTipo}
+                onChange={(e) => setFilterTipo(e.target.value)}
+                className="px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+              >
+                <option value="all">Todos os tipos</option>
+                <option value="academico">Academico</option>
+                <option value="desporto">Desporto</option>
+                <option value="cultural">Cultural</option>
+                <option value="workshop">Workshop</option>
+                <option value="conferencia">Conferencia</option>
+                <option value="palestra">Palestra</option>
+                <option value="outro">Outro</option>
+              </select>
+
               {/* Sort */}
               <select
                 value={sortBy}
@@ -212,10 +249,25 @@ export default function Eventos() {
               return (
                 <ScrollReveal key={evento.id} delay={index * 50}>
                   <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
-                    <div className="h-48 bg-gradient-to-r from-primary-400 to-primary-600 flex items-center justify-center relative overflow-hidden">
-                      <svg className="w-16 h-16 text-white group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                    <div className="h-48 relative overflow-hidden">
+                      {evento.imagem_url ? (
+                        <img
+                          src={evento.imagem_url}
+                          alt={evento.titulo}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-r from-primary-400 to-primary-600 flex items-center justify-center">
+                          <svg className="w-16 h-16 text-white group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-700 backdrop-blur-sm">
+                          {getTipoLabel(evento.tipo)}
+                        </span>
+                      </div>
                       <div className="absolute top-3 right-3">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${badge.color}`}>
                           {badge.text}
@@ -282,14 +334,27 @@ export default function Eventos() {
               return (
                 <ScrollReveal key={evento.id} delay={index * 30}>
                   <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-4 flex items-center gap-4 group">
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                      {evento.imagem_url ? (
+                        <img
+                          src={evento.imagem_url}
+                          alt={evento.titulo}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+                          <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">{evento.titulo}</h3>
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 flex-shrink-0">
+                          {getTipoLabel(evento.tipo)}
+                        </span>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${badge.color}`}>
                           {badge.text}
                         </span>
