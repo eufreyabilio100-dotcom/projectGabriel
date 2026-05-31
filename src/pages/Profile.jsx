@@ -85,16 +85,18 @@ export default function Profile() {
       if (error) throw error
 
       // Actualizar no auth metadata (para reflectir no Navbar)
-      const { data: { user: updatedUser }, error: authError } = await supabase.auth.updateUser({
+      const { error: authError } = await supabase.auth.updateUser({
         data: { nome: nome.trim() }
       })
 
       if (authError) {
         console.error('Erro ao actualizar auth metadata:', authError)
-      } else if (updatedUser) {
-        // Forcar actualizacao do utilizador no contexto
-        setUser(updatedUser)
       }
+
+      // Esperar um pouco e depois actualizar o utilizador no contexto
+      setTimeout(async () => {
+        await refreshUser()
+      }, 500)
 
       setProfile({ ...profile, nome: nome.trim() })
       setEditMode(false)
